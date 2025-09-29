@@ -1,0 +1,92 @@
+---
+- name: update the apt cache on the repo server
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: install the required packages on the repo server
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+- name: download the required packages for gitlab
+  ansible.builtin.get_url:
+    url: https://dl.gitea.com/gitea/{{ gitlab_version }}/gitea-{{ gitlab_version }}-linux-amd64
+    dest: /var/tmp/gitea
+    mode: u=rwx,g=x,o=x
+
+- name: create the git user on the repo server
+  ansible.builtin.user:
+    name: git
+    shell: /bin/bash
+    comment: "Git Version Control"
+    system: true
+    create_home: yes
+    password_lock: true
+
+- name: create the base dir for gitlab on the repo server
+  ansible.builtin.file:
+    path: "{{ gitlab_base_dir }}"
+    state: directory
+    owner: git
+    group: git
+    mode: "0750"
+
+- name: create the config dir for gitlab on the repo server
+  ansible.builtin.file:
+    path: /etc/gitea
+    state: directory
+    owner: root
+    group: git
+    mode: "0770"
+
+- name: create the required sub directories for gitlab on the repo server
+  ansible.builtin.file:
+    path: "{{ gitlab_base_dir}}/{{ item }}"
+    state: directory
+    owner: git
+    group: git
+    mode: "0750"
+  loop:
+    - custom
+    - data
+    - log
+
+- name: copy the gitlab binary to the path on the repo server
+  ansible.builtin.copy:
+    src: /var/tmp/gitea 
+    dest: /usr/local/bin/gitea
+    remote_src: yes
+    mode: u=rwx,g=x,o=x
+
+- name: generate the secret key for gitlab on the repo server
+  ansible.builtin.shell:
+    cmd: gitea generate secret SECRET_KEY | tee /var/tmp/gitea_secret_key
+  args:
+    creates: /var/tmp/gitea_secret_key
+  register: gitea_secret_key
+
+- name: generate the required conf for gitlab on the repo server
+  ansible.builtin.template:
+    src: app.ini.j2
+    dest: /etc/gitea/app.ini
+    owner: git
+    group: git
+    mode: "0644"
+  notify: Restart Gitlab
+  when: gitea_secret_key.changed
+
+- name: generate the required service conf for the gitlab systemd unit on the repo server
+  ansible.builtin.template:
+    src: gitea.service.j2
+    dest: /etc/systemd/system/gitea.service
+    owner: git
+    group: git
+    mode: "0644"
+
+- name: enable and start the gitlab service
+  ansible.builtin.service:
+    name: gitea.service
+    state: started
+    enabled: true
+    daemon_reload: true

@@ -1,0 +1,63 @@
+---
+# defaults file for repo-server-setup
+apt_mirror_pkgs:
+  - debmirror
+  - gnupg
+  - xz-utils
+
+apt_mirror_base_path: "/mnt/repo-server-data"
+
+apt_mirror_dir: "{{ apt_mirror_base_path }}/UbnuntuMirror"
+
+apt_mirror_keyring_dir: "{{ apt_mirror_dir}}/mirrorkeyring"
+
+apt_mirror_pool_dir: "{{ apt_mirror_dir }}/ubuntu-mirror"
+
+apt_mirror_keyring_file: "{{ apt_mirror_keyring_dir }}/trustedkeys.gpg"
+
+apt_mirror_release: "noble,noble-updates,noble-security"
+
+apt_mirror_section: "main,universe"
+
+apt_mirror_method: "http"
+
+apache2_ssl_ports:
+  - 443
+  - 8443
+  - 9443
+
+demo_crt_dir_path: "{{ lookup('env', 'HOME') }}/demo_crt_dir"
+
+demo_crt_cert_file: "demo_ca.crt"
+
+demo_crt_key_file: "demo_ca.key"
+
+demo_crt_sans:
+  - "*.lab.local"
+
+demo_crt_key_bits: '2048'
+demo_crt_valid_days: '365'
+
+gitlab_version: "1.24.6"
+
+gitlab_base_path: "/mnt/repo-server-data"
+
+gitlab_base_dir: "{{ gitlab_base_path }}/gitea"
+
+docker_required_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-compose-plugin
+
+pypi_image_name: "pulp/pulp"
+
+pypi_image_tag: "latest"
+
+pypi_base_path: "/mnt/repo-server-data"
+
+pypi_base_dir: "{{ pypi_base_path }}/pulp"
+
+kubespray_branch: "master"
+
+genestack_branch: "main"

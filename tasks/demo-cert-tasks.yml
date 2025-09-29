@@ -1,0 +1,56 @@
+---
+- name: create the base directory for demo cert
+  ansible.builtin.file:
+    path: "{{ demo_crt_dir_path }}"
+    state: directory
+    mode: '0700'
+
+- name: create the required sub-directories
+  ansible.builtin.file:
+    path: "{{ demo_crt_dir_path }}/{{ item }}"
+    state: directory
+    mode: '0700'
+  loop:
+    - certs
+    - private
+    - crl
+    - newcerts
+
+- name: create the index file for the demo cert
+  ansible.builtin.file:
+    path: "{{ demo_crt_dir_path }}/index.txt"
+    state: touch
+
+- name: create the serial file for demo cert
+  ansible.builtin.copy:
+    content: '1000'
+    dest: "{{ demo_crt_dir_path }}/serial"
+
+- name: create the openssl cfg file for demo cert
+  ansible.builtin.template:
+    src: openssl.cnf.j2
+    dest: "{{ demo_crt_dir_path }}/openssl.cnf"
+    mode: '0440'
+
+- name: create the private key for the demo cert
+  community.crypto.openssl_privatekey:
+    path: "{{ demo_crt_dir_path }}/private/{{ demo_crt_key_file }}"
+    state: present
+    size: "{{ demo_crt_key_bits }}"
+
+- name: create the demo cert
+  ansible.builtin.shell:
+    cmd: openssl req -config "{{ demo_crt_dir_path }}/openssl.cnf" -key "{{ demo_crt_dir_path }}/private/{{ demo_crt_key_file }}" -new -x509 -days "{{ demo_crt_valid_days }}" -sha256 -extensions v3_ca -out "{{ demo_crt_dir_path }}/certs/{{ demo_crt_cert_file }}"
+  args:
+    chdir: "{{ demo_crt_dir_path }}"
+    creates: "{{ demo_crt_dir_path }}/certs/{{ demo_crt_cert_file }}"
+
+- name: copy the demo cert to the trusted CA(s)
+  ansible.builtin.copy:
+    src: "{{ demo_crt_dir_path }}/certs/{{ demo_crt_cert_file }}"
+    dest: "/usr/local/share/ca-certificates/{{ demo_crt_cert_file }}"
+    remote_src: yes
+
+- name: update CA trust store on the repo server
+  ansible.builtin.command:
+    cmd: update-ca-certificates

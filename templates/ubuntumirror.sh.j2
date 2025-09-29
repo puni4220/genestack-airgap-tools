@@ -1,0 +1,47 @@
+# shell script for ubuntu mirror
+
+#!/bin/bash
+
+set -euo pipefail
+
+# set the GPG key home directory
+export GNUPGHOME={{ apt_mirror_keyring_dir }}
+
+# set the keyring file
+KEYRING={{ apt_mirror_keyring_file }}
+
+# set the OS arch for ubuntu i.e amd64
+ARCH="amd64"
+
+# set the ubuntu release i.e noble,jammy,focal
+RELEASE={{ apt_mirror_release }}
+
+# set the section for the release; minimum required are main and universe
+SECTION={{ apt_mirror_section }}
+
+# remote server i.e archive.ubuntu.com
+SERVER="archive.ubuntu.com"
+
+# path on the remote server
+INPATH="/ubuntu"
+
+# sync method i.e http or rsync
+PROTO={{ apt_mirror_method }}
+
+# outpath on the local repo server
+OUTPATH={{ apt_mirror_pool_dir }}
+
+LOG_FILE="/var/log/umirr.log"
+
+# function for error handling 
+function err_ext() {
+  echo "$(date +%Y-%m-%d): ERR: $1" | tee -a "$LOG_FILE" >&2
+  exit 1
+}
+
+# check if the keyring file exists
+if [ ! -f $KEYRING ]; then
+  err_ext "keyring file doesn't exist; please ensure the required keyring file $KEYRING exists"
+else
+  echo "$(date +%Y-%m-%d): INFO: keyring file exists"
+fi

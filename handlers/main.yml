@@ -1,0 +1,11 @@
+---
+# handlers file for repo-server-setup
+- name: Restart Apache2
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+
+- name: Restart Gitlab
+  ansible.builtin.service:
+    name: gitea.service
+    state: restarted

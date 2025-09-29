@@ -1,0 +1,20 @@
+<VirtualHost *:80>
+    ServerName {{ apache2_virtualhost_fqdn | default(ansible_nodename) }}
+    Redirect permanent / https://{{ apache2_virtualhost_fqdn | default(ansible_nodename) }}
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName {{ apache2_virtualhost_fqdn | default(ansible_nodename) }}
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/{{ demo_crt_cert_file }}
+    SSLCertificateKeyFile /etc/ssl/private/{{ demo_crt_key_file }}
+
+    DocumentRoot {{ apache2_virtualhost_base_dir | default('/var/www/' ~ ansible_fqdn) }}
+
+    <Directory {{ apache2_virtualhost_base_dir | default('/var/www/' ~ ansible_fqdn) }}>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>

@@ -1,0 +1,18 @@
+<VirtualHost *:8443>
+    ServerName {{ pypi_apache2_fqdn | default(ansible_nodename) }}
+
+    # SSL Configuration
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/{{ demo_crt_cert_file }}
+    SSLCertificateKeyFile /etc/ssl/private/{{ demo_crt_key_file }}
+
+    # Proxy Configuration
+    ProxyRequests Off
+    ProxyPreserveHost On
+    ProxyPass /pulp/ http://{{ local_pypi_hostname | default(ansible_nodename) }}:8080/pulp/
+    ProxyPassReverse /pulp/ http://{{ local_pypi_hostname | default(ansible_nodename) }}:8080/pulp/
+
+    # It's a good practice to set headers for the backend
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+</VirtualHost>

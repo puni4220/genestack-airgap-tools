@@ -1,0 +1,90 @@
+---
+- name: pull the container image for local pypi on the repo server
+  community.docker.docker_image:
+    name: "{{ pypi_image_name }}"
+    source: pull
+    state: present
+    tag: "{{ pypi_image_tag | default('latest') }}"
+
+- name: create the base directory for local pypi on the repo server
+  ansible.builtin.file:
+    path: "{{ pypi_base_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: create the required directories for the local pypi on the repo server
+  ansible.builtin.file:
+    path: "{{ pypi_base_dir }}/{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - settings
+    - pulp_storage
+    - pgsql
+    - containers
+
+- name: create the required certs directory for the local pypi on the repo server
+  ansible.builtin.file:
+    path: "{{ pypi_base_dir }}/settings/certs"
+    state: directory
+    mode: '0755'
+
+- name: create the settings.py file for local pypi on the repo server
+  ansible.builtin.template:
+    src: settings.py.j2
+    dest: "{{ pypi_base_dir }}/settings/settings.py"
+    mode: '0644'
+
+- name: create the docker container for local pypi on the repo server
+  community.docker.docker_container:
+    name: local_pypi
+    image: "{{ pypi_image_name }}"
+    detach: true
+    ports:
+      - "8080:80"
+    volumes:
+      - "{{ pypi_base_dir }}/settings:/etc/pulp"
+      - "{{ pypi_base_dir }}/pulp_storage:/var/lib/pulp"
+      - "{{ pypi_base_dir }}/pgsql:/var/lib/pgsql"
+      - "{{ pypi_base_dir }}/containers:/var/lib/containers"
+    devices:
+      - "/dev/fuse:/dev/fuse:rwm"
+
+- name: create the apache2 conf for the local pypi on the repo server
+  ansible.builtin.template:
+    src: local-pypi-apache2-proxy.conf.j2
+    dest: /etc/apache2/sites-available/local-pypi-apache2-proxy.conf
+    mode: '0644'
+
+- name: enable the apache2 conf for the local pypi on the repo server
+  ansible.builtin.command:
+    cmd: a2ensite local-pypi-apache2-proxy.conf
+  args:
+    creates: /etc/apache2/sites-enabled/local-pypi-apache2-proxy.conf
+  notify: Restart Apache2
+
+- name: create the virtual env and upgrade pip on the repo server
+  ansible.builtin.pip:
+    name: pip
+    virtualenv: "{{ ansible_env.HOME }}/local_pypi_venv"
+    extra_args: --upgrade
+    virtualenv_command: python3 -m venv
+
+- name: install the required cli for local pypi on the repo server
+  ansible.builtin.pip:
+    name: 'pulp-cli[pygments]'
+    state: present
+    virtualenv: "{{ ansible_env.HOME }}/local_pypi_venv"
+    virtualenv_command: python3 -m venv
+
+- name: set the root password for local pypi on the repo server
+  ansible.builtin.shell:
+    cmd: "docker exec local_pypi bash -c 'pulpcore-manager reset-admin-password --password {{ local_pypi_root_passwd | default('rack1234') }}'"
+  args:
+    creates: "{{ ansible_env.HOME }}/.config/pulp/cli.toml"
+
+- name: create the config for the local pypi on the repo server
+  ansible.builtin.shell:
+    cmd: "{{ ansible_env.HOME }}/local_pypi_venv/bin/pulp config create --username admin --base-url https://{{ pypi_apache2_fqdn | default(ansible_nodename) }}:8443 --password {{ local_pypi_root_passwd | default('rack1234') }} --no-verify-ssl" 
+  args:
+    creates: "{{ ansible_env.HOME }}/.config/pulp/cli.toml"

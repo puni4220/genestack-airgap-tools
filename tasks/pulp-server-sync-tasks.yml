@@ -1,0 +1,24 @@
+---
+- name: download the pypi requirements for kubespray on the repo server
+  ansible.builtin.command:
+    cmd: curl -L -o /var/tmp/requirements_kubespray.txt https://raw.githubusercontent.com/kubernetes-sigs/kubespray/refs/heads/{{ kubespray_branch }}/requirements.txt
+  args:
+    creates: /var/tmp/requirements_kubespray.txt
+
+- name: download the pypi requirements for genestack on the repo server
+  ansible.builtin.command:
+    cmd: curl -L -o /var/tmp/requirements_genestack.txt https://raw.githubusercontent.com/rackerlabs/genestack/refs/heads/{{ genestack_branch }}/requirements.txt
+  args:
+    creates: /var/tmp/requirements_genestack.txt
+
+- name: download the required pypi packages for kubespary on the repo server
+  ansible.builtin.command:
+    cmd: "{{ ansible_env.HOME }}/local_pypi_venv/bin/pip3 download -r /var/tmp/requirements_kubespray.txt -d /var/tmp/kubespray_pip_packages"
+  args:
+    creates: /var/tmp/kubespray_pip_packages
+
+- name: download the required pypi packages for genestack on the repo server
+  ansible.builtin.command:
+    cmd: "{{ ansible_env.HOME }}/local_pypi_venv/bin/pip3 download -r /var/tmp/requirements_genestack.txt -d /var/tmp/genestack_pip_packages"
+  args:
+    creates: /var/tmp/genestack_pip_packages

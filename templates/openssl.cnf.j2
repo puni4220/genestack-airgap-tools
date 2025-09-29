@@ -1,0 +1,54 @@
+[ ca ]
+default_ca = CA_default
+
+[ CA_default ]
+dir               = {{ demo_crt_dir_path }}    # Root directory for CA files
+certs             = $dir/certs            # Where to store issued certs
+crl_dir           = $dir/crl              # Where to store CRLs
+new_certs_dir     = $dir/newcerts         # Where to store new certs
+database          = $dir/index.txt        # Database index file
+serial            = $dir/serial           # Serial number file
+RANDFILE          = $dir/private/.rand    # Random seed file
+
+private_key       = $dir/private/{{ demo_crt_key_file }}   # CA private key
+certificate       = $dir/certs/{{ demo_crt_cert_file }}    # CA certificate
+
+default_days      = 3650
+default_md        = sha256
+preserve          = no
+policy            = policy_any
+
+[ policy_any ]
+countryName             = optional
+stateOrProvinceName     = optional
+organizationName        = optional
+organizationalUnitName  = optional
+commonName              = supplied
+emailAddress            = optional
+
+[ req ]
+default_bits        = 2048
+default_md          = sha256
+distinguished_name  = req_distinguished_name
+x509_extensions     = v3_ca
+prompt              = no
+
+[ req_distinguished_name ]
+C  = US
+ST = TEXAS
+O  = RPC
+OU = rackerlabs
+CN = {{ ansible_fqdn }}
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+subjectAltName = @alt_names
+
+[ alt_names ]
+{% for item in demo_crt_sans %}
+DNS.{{ loop.index }} = {{ item }}
+{% endfor %}
+IP.1  = 0.0.0.0

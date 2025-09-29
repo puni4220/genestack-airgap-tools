@@ -1,0 +1,21 @@
+[server]
+APP_NAME = Gitea
+HTTP_PORT = 3000
+ROOT_URL = http://{{ gitlab_fqdn | default(ansible_nodename) }}:3000/
+DISABLE_SSH = true
+
+[database]
+DB_TYPE = sqlite3
+PATH = {{ gitlab_base_dir }}/data/gitea.db
+
+[repository]
+ROOT = {{ gitlab_base_dir }}/data/repositories
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY = {{ gitea_secret_key.stdout_lines[0] }}
+
+[log]
+MODE = file
+LEVEL = Info
+ROOT_PATH = {{ gitlab_base_dir }}/log

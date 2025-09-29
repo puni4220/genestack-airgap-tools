@@ -1,0 +1,14 @@
+[Unit]
+Description=Gitea local 
+After=network.target
+[Service]
+RestartSec=2s
+Type=simple
+User=git
+Group=git
+WorkingDirectory={{ gitlab_base_dir }}
+ExecStart=/usr/local/bin/gitea web --config /etc/gitea/app.ini
+Restart=always
+Environment=USER=git HOME=/home/git GITEA_WORK_DIR={{ gitlab_base_dir }}
+[Install]
+WantedBy=multi-user.target

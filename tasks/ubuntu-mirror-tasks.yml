@@ -1,0 +1,37 @@
+---
+# tasks file for repo-server-setup
+
+- name: Update apt cache on the repo server
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: install the required packages on the repo server
+  ansible.builtin.apt:
+    pkg:
+      - "{{ item }}"
+    state: present
+  loop: "{{ apt_mirror_pkgs }}"
+
+- name: create the required directory structure for the ubuntu mirror
+  ansible.builtin.file:
+    path: "{{ apt_mirror_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: create the directory for the mirror gpg key
+  ansible.builtin.file:
+    path: "{{ apt_mirror_keyring_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: create the gpg key for the ubuntu mirror
+  ansible.builtin.command:
+    cmd: gpg --no-default-keyring --keyring "{{ apt_mirror_keyring_file }}" --import /usr/share/keyrings/ubuntu-archive-keyring.gpg
+    creates: "{{ apt_mirror_keyring_file }}"
+
+- name: create the shell script for ubuntu mirror
+  ansible.builtin.template:
+    src: ubuntumirror.sh.j2
+    dest: "{{ apt_mirror_dir }}/ubuntumirror.sh"
+    mode: '0755'
