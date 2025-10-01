@@ -1,0 +1,17 @@
+---
+- name: create the temp dir on the repo server for cloning required bare repos
+  ansible.builtin.file:
+    path: "{{ gitlab_tmp_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: clone the required repositories on the repo server
+  ansible.builtin.git:
+    repo: "{{ item }}"
+    dest: "{{ gitlab_tmp_dir }}/{{ item.split('/') | last }}"
+    bare: yes
+  loop: "{{ gitlab_required_repos }}"
+
+- name: check and create the repos is required
+  include_tasks: gitlab-repo-create-tasks.yml
+  loop: "{{ gitlab_required_repos }}"

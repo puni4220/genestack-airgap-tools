@@ -44,6 +44,10 @@ gitlab_base_path: "/mnt/repo-server-data"
 
 gitlab_base_dir: "{{ gitlab_base_path }}/gitea"
 
+gitlab_admin_user: "admin"
+
+gitlab_admin_passwd: "rack1234"
+
 docker_required_packages:
   - docker-ce
   - docker-ce-cli
@@ -61,3 +65,16 @@ pypi_base_dir: "{{ pypi_base_path }}/pulp"
 kubespray_branch: "master"
 
 genestack_branch: "main"
+
+gitlab_tmp_dir: "/var/tmp/local_gitea_repos"
+gitlab_git_remote_url: "https://github.com"
+gitlab_opendev_remote_url: "https://opendev.org"
+gitlab_required_repos:
+  - "{{ gitlab_git_remote_url }}/rackerlabs/genestack"
+  - "{{ gitlab_git_remote_url }}/kubernetes-sigs/kubespray"
+  - "{{ gitlab_git_remote_url }}/openstack-exporter/helm-charts"
+  - "{{ gitlab_git_remote_url }}/zalando/postgres-operator.git"
+  - "{{ gitlab_git_remote_url }}/ansible-collections/ansible.posix"
+  - "{{ gitlab_git_remote_url }}/ansible-collections/community.general"
+  - "{{ gitlab_git_remote_url }}/ansible-collections/kubernetes.core"
+  - "{{ gitlab_opendev_remote_url }}/openstack/ansible-collections-openstack"

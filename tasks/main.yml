@@ -9,6 +9,10 @@
 
 - import_tasks: gitlab-tasks.yml
 
+- import_tasks: gitlab-sync-tasks.yml
+  tags:
+    - local_gitlab_tasks
+
 - import_tasks: docker-install-tasks.yml
 
 - import_tasks: pulp-server-install-tasks.yml

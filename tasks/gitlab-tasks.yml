@@ -90,3 +90,22 @@
     state: started
     enabled: true
     daemon_reload: true
+
+- name: check if admin user for gitlab already exists on the repo server
+  ansible.builtin.shell:
+    cmd: su git -c "gitea admin user list --config /etc/gitea/app.ini | grep {{ gitlab_admin_user }}"
+  register: _admin_user_exists
+  changed_when: false
+  failed_when: _admin_user_exists.rc > 1
+
+- name: create the admin user for gitlab if required on the repo server
+  ansible.builtin.shell:
+    cmd: >
+      su git -c "gitea admin user create
+      --username {{ gitlab_admin_user }}
+      --password {{ gitlab_admin_passwd }}
+      --email {{ gitlab_admin_email | default('admin@lab.local') }}
+      --admin
+      --must-change-password=false
+      --config /etc/gitea/app.ini"
+  when: _admin_user_exists.rc != 0

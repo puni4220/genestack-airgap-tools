@@ -10,6 +10,9 @@ PATH = {{ gitlab_base_dir }}/data/gitea.db
 
 [repository]
 ROOT = {{ gitlab_base_dir }}/data/repositories
+ENABLE_PUSH_CREATE_USER = true
+ENABLE_PUSH_CREATE_ORG = true
+DEFAULT_PUSH_CREATE_PRIVATE = false
 
 [security]
 INSTALL_LOCK = true
