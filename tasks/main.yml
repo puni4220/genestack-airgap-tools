@@ -1,11 +1,17 @@
 ---
 # tasks file for repo-server-setup
 
-- import_tasks: ubuntu-mirror-tasks.yml
-
 - import_tasks: demo-cert-tasks.yml
+  tags:
+    - always
 
 - import_tasks: http-server-tasks.yml
+  tags:
+    - always
+
+- import_tasks: ubuntu-mirror-tasks.yml
+  tags:
+    - local_ubuntu_mirror_tasks
 
 - import_tasks: gitlab-tasks.yml
 

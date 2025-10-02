@@ -26,7 +26,7 @@ SERVER="archive.ubuntu.com"
 INPATH="/ubuntu"
 
 # sync method i.e http or rsync
-PROTO={{ apt_mirror_method }}
+PROTO=http
 
 # outpath on the local repo server
 OUTPATH={{ apt_mirror_pool_dir }}
@@ -45,3 +45,18 @@ if [ ! -f $KEYRING ]; then
 else
   echo "$(date +%Y-%m-%d): INFO: keyring file exists"
 fi
+
+# The --nosource option only downloads debs and not deb-src's
+# The --progress option shows files as they are downloaded
+# --nocleanup  Do not clean up the local mirror after mirroring is complete. Use this option to keep older repository
+# Start script
+#
+debmirror       -a "$ARCH" \
+                --no-source \
+                -s "$SECTION" \
+                -h "$SERVER" \
+                -d "$RELEASE" \
+                -r "$INPATH" \
+                --progress \
+                --method="$PROTO" \
+                "$OUTPATH"
