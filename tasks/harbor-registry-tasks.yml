@@ -1,0 +1,44 @@
+---
+- name: download the harbor archive from github on the repo server
+  ansible.builtin.get_url:
+    url: "https://github.com/goharbor/harbor/releases/download/{{ harbor_version }}/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/var/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
+    mode: '0644'
+
+- name: extract the harbor archive on the repo server
+  ansible.builtin.unarchive:
+    src: "/var/tmp/harbor-online-installer-{{ harbor_version }}.tgz"
+    dest: "/var/tmp/"
+
+- name: generate the harbor yml on the repo server
+  ansible.builtin.template:
+    src: harbor.yml.j2
+    dest: /var/tmp/harbor/harbor.yml
+    mode: '0644'
+
+- name: check if harbor registry is already running on the repo server
+  ansible.builtin.uri:
+    url: "https://{{ harbor_fqdn | default(ansible_nodename) }}:{{ harbor_https_port }}"
+    method: GET
+    status_code: 200
+    validate_certs: false
+  register: _harbor_registry_status
+  ignore_errors: true
+
+- name: print message harbor is running
+  ansible.builtin.debug:
+    msg: "harbor registry is up and running on {{ harbor_fqdn | default(ansible_nodename) }} port {{ harbor_https_port }}"
+  when: _harbor_registry_status is succeeded
+
+- name: print messaage harbor is not running
+  ansible.builtin.debug:
+    msg: "harbor registry is not running!; trying the script to start harbor registry"
+  when: _harbor_registry_status is failed
+
+- name: run the script to start harbor registry on the repo server
+  ansible.builtin.shell: "./install.sh" 
+  args:
+    chdir: "/var/tmp/harbor/"
+  async: 600
+  poll: 10
+  when: _harbor_registry_status is failed

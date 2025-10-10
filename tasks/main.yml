@@ -2,12 +2,8 @@
 # tasks file for repo-server-setup
 
 - import_tasks: demo-cert-tasks.yml
-  tags:
-    - always
 
 - import_tasks: http-server-tasks.yml
-  tags:
-    - always
 
 - import_tasks: ubuntu-mirror-tasks.yml
   tags:
@@ -28,3 +24,7 @@
 - import_tasks: pulp-server-sync-tasks.yml
   tags:
     - local_pypi_tasks
+
+- import_tasks: harbor-registry-tasks.yml
+  tags:
+    - local_harbor_tasks

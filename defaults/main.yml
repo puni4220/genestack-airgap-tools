@@ -78,3 +78,19 @@ gitlab_required_repos:
   - "{{ gitlab_git_remote_url }}/ansible-collections/community.general"
   - "{{ gitlab_git_remote_url }}/ansible-collections/kubernetes.core"
   - "{{ gitlab_opendev_remote_url }}/openstack/ansible-collections-openstack"
+
+harbor_base_path: "/mnt/repo-server-data"
+
+harbor_base_dir: "{{ harbor_base_path }}/harbor"
+
+# harbor_fqdn: default set to ansible_nodename
+
+harbor_http_port : '8085'
+
+harbor_https_port: '6443'
+
+harbor_admin_passwd: 'rack1234'
+
+harbor_db_passwd: 'rack1234'
+
+harbor_version: 'v2.14.0'
